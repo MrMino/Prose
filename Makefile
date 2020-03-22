@@ -8,4 +8,4 @@ a.out: $(obj)
 
 .PHONY: clean
 clean:
-	rm -f $(obj) target
+	rm -f $(obj) a.out
