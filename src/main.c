@@ -4,6 +4,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <unistd.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -13,14 +14,43 @@
 #define LOCAL_PORT 12345
 #define MAX_LISTEN_BACKLOG 128
 
+#define BUFFER_LEN 1024
+
 /* TODO
  * 1. close() should be called after bind() or listen() fails.
  * 2. close() should be called on a SIGINT.
+ * 3. recv() should be called until CRLFCRLF sequence is received.
  */
 
 
 void serve(int client_socketfd){
-    printf("%d", client_socketfd);
+    char *buffer = malloc(BUFFER_LEN);
+
+    int bytes_read = recv(client_socketfd, buffer, BUFFER_LEN, 0);
+    if (bytes_read < 1) {
+        free(buffer);
+        close(client_socketfd);
+        return;
+    }
+    buffer[bytes_read] = '\0';
+
+    char* url_start = buffer + 8;
+    char* url_end = strstr(url_start, " HTTP/1.1\r\n");
+    if (url_end == NULL || strncmp(buffer, "CONNECT ", 8) != 0) {
+        free(buffer);
+        close(client_socketfd);
+        return;
+    }
+
+    int url_len = url_end - url_start + 1;
+    char* url = malloc(url_len);
+    strncpy(url, url_start, url_len);
+    url[url_len] = '\0';
+
+    printf("URL (len: %d): %s\n", url_len, url);
+
+    free(url);
+    free(buffer);
     close(client_socketfd);
 }
 
