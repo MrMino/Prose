@@ -19,6 +19,11 @@
  */
 
 
+void serve(int client_socketfd){
+    printf("%d", client_socketfd);
+    close(client_socketfd);
+}
+
 int main() {
     int socketfd = socket(AF_INET, SOCK_STREAM, 0);
     if (socketfd < 0) {
@@ -37,6 +42,20 @@ int main() {
 
     if (listen(socketfd, MAX_LISTEN_BACKLOG) < 0) {
         fatal_errno("Cannot listen on server socket", FATAL_SOCK_INIT_FAIL);
+    }
+
+    struct sockaddr_in client_addr;
+    socklen_t client_addr_len = sizeof(client_addr);
+
+    for (;;) {
+        int client = accept(
+                socketfd,
+                (struct sockaddr*) &client_addr,
+                &client_addr_len
+            );
+
+        serve(client);
+        break;
     }
 
     close(socketfd);
