@@ -13,6 +13,12 @@
 #define LOCAL_PORT 12345
 #define MAX_LISTEN_BACKLOG 128
 
+/* TODO
+ * 1. close() should be called after bind() or listen() fails.
+ * 2. close() should be called on a SIGINT.
+ */
+
+
 int main() {
     int socketfd = socket(AF_INET, SOCK_STREAM, 0);
     if (socketfd < 0) {
