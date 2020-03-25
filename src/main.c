@@ -22,8 +22,7 @@
  * 3. recv() should be called until CRLFCRLF sequence is received.
  */
 
-
-void serve(int client_socketfd){
+void serve(int client_socketfd) {
     char *buffer = malloc(BUFFER_LEN);
 
     int bytes_read = recv(client_socketfd, buffer, BUFFER_LEN, 0);
@@ -34,8 +33,8 @@ void serve(int client_socketfd){
     }
     buffer[bytes_read] = '\0';
 
-    char* url_start = buffer + 8;
-    char* url_end = strstr(url_start, " HTTP/1.1\r\n");
+    char *url_start = buffer + 8;
+    char *url_end = strstr(url_start, " HTTP/1.1\r\n");
     if (url_end == NULL || strncmp(buffer, "CONNECT ", 8) != 0) {
         free(buffer);
         close(client_socketfd);
@@ -43,7 +42,7 @@ void serve(int client_socketfd){
     }
 
     int url_len = url_end - url_start + 1;
-    char* url = malloc(url_len);
+    char *url = malloc(url_len);
     strncpy(url, url_start, url_len);
     url[url_len] = '\0';
 
@@ -65,8 +64,9 @@ int main() {
     server_addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
     server_addr.sin_port = htons(LOCAL_PORT);
 
-    if (bind(socketfd, (struct sockaddr*) &server_addr,
-                sizeof(struct sockaddr_in)) < 0) {
+    if (bind(socketfd, (struct sockaddr *)&server_addr,
+             sizeof(struct sockaddr_in))
+        < 0) {
         fatal_errno("Cannot bind", FATAL_SOCK_INIT_FAIL);
     }
 
@@ -78,11 +78,8 @@ int main() {
     socklen_t client_addr_len = sizeof(client_addr);
 
     for (;;) {
-        int client = accept(
-                socketfd,
-                (struct sockaddr*) &client_addr,
-                &client_addr_len
-            );
+        int client = accept(socketfd, (struct sockaddr *)&client_addr,
+                            &client_addr_len);
 
         serve(client);
         break;
