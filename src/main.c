@@ -95,9 +95,10 @@ int recv_request_head(int sockfd, char *buffer, int bytes_max,
 }
 
 /* TODO
- * 1. close() should be called after bind() or listen() fails.
- * 2. close() should be called on a SIGINT.
- * 3. recv() should be called until CRLFCRLF sequence is received.
+ * close() should be called after bind() or listen() fails.
+ * close() should be called on a SIGINT.
+ * Buffer length should be 8KiB, maybe it should be circular?
+ * After first request, use splice() loop.
  */
 
 void serve(int client_socketfd) {
