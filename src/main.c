@@ -101,33 +101,19 @@ int recv_request_head(int sockfd, char *buffer, int bytes_max,
  * After first request, use splice() loop.
  */
 
-void serve(int client_socketfd) {
+void serve_client(int client_socketfd) {
     char *buffer = malloc(BUFFER_LEN);
 
-    int bytes_read = recv(client_socketfd, buffer, BUFFER_LEN, 0);
-    if (bytes_read < 1) {
-        free(buffer);
-        close(client_socketfd);
-        return;
-    }
-    buffer[bytes_read] = '\0';
-
-    char *url_start = buffer + 8;
-    char *url_end = strstr(url_start, " HTTP/1.1\r\n");
-    if (url_end == NULL || strncmp(buffer, "CONNECT ", 8) != 0) {
-        free(buffer);
-        close(client_socketfd);
-        return;
+    struct timeval timeout = {.tv_sec = 5, .tv_usec = 0};
+    int received_bytes = recv_request_head(client_socketfd, buffer,
+                                           BUFFER_LEN - 1, &timeout);
+    if (received_bytes > 0) {
+        buffer[received_bytes] = '\0';
+        printf("BUFFER:\n%s\n", buffer);
+    } else {
+        printf("TIMED OUT\n");
     }
 
-    int url_len = url_end - url_start + 1;
-    char *url = malloc(url_len);
-    strncpy(url, url_start, url_len);
-    url[url_len] = '\0';
-
-    printf("URL (len: %d): %s\n", url_len, url);
-
-    free(url);
     free(buffer);
     close(client_socketfd);
 }
@@ -160,8 +146,7 @@ int main() {
         int client = accept(socketfd, (struct sockaddr *)&client_addr,
                             &client_addr_len);
 
-        serve(client);
-        break;
+        serve_client(client);
     }
 
     close(socketfd);
