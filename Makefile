@@ -1,11 +1,20 @@
 src = $(wildcard src/*.c)
 obj = $(src:.c=.o)
 
-LDFLAGS = 
+LDFLAGS =
+CFLAGS =
+
+.PHONY: all debug clean
+
+all: a.out
+all: CFLAGS += -s
+all: LDFLAGS += -s
+
+debug: CFLAGS += -DDEBUG -g
+debug: a.out
+
+clean:
+	rm -f $(obj) a.out
 
 a.out: $(obj)
 	$(CC) -o $@ $^ $(LDFLAGS)
-
-.PHONY: clean
-clean:
-	rm -f $(obj) a.out
