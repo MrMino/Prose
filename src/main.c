@@ -192,6 +192,17 @@ void serve_client(int client_socketfd) {
         }
 
         http_request_line *request = parse_request_line(method_line);
+        if (request == NULL) {
+            if (errno == 0) {
+                puts("BAD REQUEST LINE");
+            } else {
+                puts("ERROR PARSING REQUEST LINE");
+            }
+            free(buffer);
+            close(client_socketfd);
+            return;
+        }
+
         printf("Method: %s\nURI: %s\nVersion: %s\n", request->method,
                request->uri, request->http_version);
         free_http_request_line(request);
