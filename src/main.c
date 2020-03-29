@@ -207,7 +207,7 @@ void serve_client(int client_socketfd) {
                request->uri, request->http_version);
         free_http_request_line(request);
     } else {
-        printf("TIMED OUT\n");
+        puts("TIMED OUT");
     }
 
     free(buffer);
