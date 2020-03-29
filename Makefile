@@ -2,7 +2,7 @@ src = $(wildcard src/*.c)
 obj = $(src:.c=.o)
 
 LDFLAGS =
-CFLAGS =
+CFLAGS = -Wall -Wextra -Wpedantic
 
 .PHONY: all debug clean
 
