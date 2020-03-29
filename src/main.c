@@ -164,17 +164,10 @@ int recv_request_head(int sockfd, char *buffer, int bytes_max,
     return -1;
 }
 
-/* TODO
- * close() should be called on a SIGINT.
- * After first request, use splice() loop.
- */
-
-void serve_client(int client_socketfd) {
-    char *buffer = malloc(BUFFER_LEN);
-
+void handle_request(int socketfd, char *buffer) {
     struct timeval timeout = {.tv_sec = 5, .tv_usec = 0};
-    int received_bytes = recv_request_head(client_socketfd, buffer,
-                                           BUFFER_LEN - 1, &timeout);
+    int received_bytes =
+            recv_request_head(socketfd, buffer, BUFFER_LEN - 1, &timeout);
     if (received_bytes > 0) {
         buffer[received_bytes] = '\0';
 
@@ -185,8 +178,6 @@ void serve_client(int client_socketfd) {
             } else {
                 puts("ERROR PARSING REQUEST LINE");
             }
-            free(buffer);
-            close(client_socketfd);
             return;
         }
 
@@ -197,8 +188,6 @@ void serve_client(int client_socketfd) {
             } else {
                 puts("ERROR PARSING REQUEST LINE");
             }
-            free(buffer);
-            close(client_socketfd);
             return;
         }
 
@@ -208,6 +197,17 @@ void serve_client(int client_socketfd) {
     } else {
         puts("TIMED OUT");
     }
+}
+
+/* TODO
+ * close() should be called on a SIGINT.
+ * After first request, use splice() loop.
+ */
+
+void serve_client(int client_socketfd) {
+    char *buffer = malloc(BUFFER_LEN);
+
+    handle_request(client_socketfd, buffer);
 
     free(buffer);
     close(client_socketfd);
