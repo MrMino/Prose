@@ -89,6 +89,7 @@ char *copy_line_crlf(const char *string) {
  *
  * This is a simple wrapper around select() -> recv().
  * Received data is put into memory address pointed to by buffer argument.
+ * Data IS NOT null-terminated.
  *
  * Returns the number of received bytes or -1 on error.
  *
@@ -119,17 +120,18 @@ int timed_read(int sockfd, char *buffer, int bytes_max,
 
 /* Read from socket until one of the following:
  *  - "\r\n\r\n" (double CRLF) sequence is received
- *  - received bytes_max bytes before double CRLF occured
+ *  - received bytes_max - 1 bytes before double CRLF occured
  *  - timeout is exceeded
  *
  * Received data is put into memory address pointed to by buffer argument.
- * Buffer is NOT null terminated.
+ * Data in the buffer is null terminated.
  *
  * NOTE: if additional bytes after double CRLF are received, they are put into
  * the buffer with the rest of the data.
  *
- * Returns number of bytes received, if double CRLF is in the buffer after
- * reading. Returns -1 on an error.
+ * Returns number of bytes received incremented by one (for the zero byte at
+ * the end of the data), if double CRLF is in the buffer after reading. Returns
+ * -1 on an error.
  *
  * Set errno to REQUEST_TOO_LONG if bytes_max is exceeded.
  * Set errno to REQUEST_TIMED_OUT if timeout is exceeded.
@@ -142,7 +144,6 @@ int recv_request_head(int sockfd, char *buffer, int bytes_max,
     while (byte_count < bytes_max) {
         int bytes_read = timed_read(sockfd, buffer_tail,
                                     bytes_max - byte_count, timeout);
-        byte_count += bytes_read;
 
         if (bytes_read < 0) {
             return -1;
@@ -150,8 +151,11 @@ int recv_request_head(int sockfd, char *buffer, int bytes_max,
         if (bytes_read == 0) {
             return 0;
         }
+
+        byte_count += bytes_read;
+        buffer[byte_count] = '\0';
         if (strstr(buffer, "\r\n\r\n") != NULL) {
-            return byte_count;
+            return byte_count + 1;
         }
         buffer_tail += bytes_read;
     }
