@@ -42,6 +42,8 @@ void free_http_request_line(http_request_line *ptr) {
  * Returns pointer to a newly allocated structure with parsed data or NULL on
  * error.
  *
+ * NOTE: this function uses strtok() which is NOT thread-safe.
+ *
  * To free the allocated memory, use free_http_request_line().
  */
 http_request_line *parse_request_line(const char *request_buffer) {
