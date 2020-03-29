@@ -17,7 +17,7 @@
 #define LOCAL_PORT 12345
 #define MAX_LISTEN_BACKLOG 128
 
-#define BUFFER_LEN 1024
+#define BUFFER_LEN 1024 * 8
 
 /* As defined in RFC7230 section 3.1.1.*/
 typedef struct http_request_line {
@@ -166,7 +166,6 @@ int recv_request_head(int sockfd, char *buffer, int bytes_max,
 
 /* TODO
  * close() should be called on a SIGINT.
- * Buffer length should be 8KiB, maybe it should be circular?
  * After first request, use splice() loop.
  */
 
