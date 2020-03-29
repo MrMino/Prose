@@ -36,33 +36,23 @@ void free_http_request_line(http_request_line *ptr) {
 
 /* Parse data from buffer as HTTP request.
  *
- * Assumes that request_buffer string starts with the first line of the HTTP
- * request.
+ * Assumes that request_line points to a zero-terminated string with the first
+ * line of the HTTP request.
  *
  * Returns pointer to a newly allocated structure with parsed data or NULL on
  * error.
+ * The members of the created structure point to different places in
+ * request_line string, and as such the string should not be free()d.
+ * Instead, to free the allocated memory, use free_http_request_line().
  *
  * NOTE: this function uses strtok() which is NOT thread-safe.
- *
- * To free the allocated memory, use free_http_request_line().
  */
-http_request_line *parse_request_line(const char *request_buffer) {
-    char *line_end = strstr(request_buffer, "\r\n");
-    if (line_end == NULL)
-        return NULL;
-    int line_size = line_end - request_buffer;
-
-    char *request_line_str = malloc(sizeof(char) * line_size + 1);
-    if (request_line_str == NULL)
-        return NULL;
-    strncpy(request_line_str, request_buffer, line_size);
-    request_line_str[line_size] = '\0';
-
+http_request_line *parse_request_line(char *request_line) {
     http_request_line *parsed_line = malloc(sizeof(http_request_line));
     if (parsed_line == NULL)
         return NULL;
 
-    parsed_line->method = strtok(request_line_str, " ");
+    parsed_line->method = strtok(request_line, " ");
     parsed_line->uri = strtok(NULL, " ");
     parsed_line->http_version = strtok(NULL, " ");
 
@@ -72,6 +62,27 @@ http_request_line *parse_request_line(const char *request_buffer) {
         return NULL;
     }
     return parsed_line;
+}
+
+/* Copy characters in the string up to the first CRLF sequence.
+ *
+ * Returns pointer to a copied string or NULL on error. The new string contains
+ * the CRLF character and is zero-terminated.
+ *
+ * If CRLF is not present in the given string, returns NULL.
+ */
+char *copy_line_crlf(const char *string) {
+    char *line_end = strstr(string, "\r\n");
+    if (line_end == NULL)
+        return NULL;
+    int line_size = line_end - string;
+
+    char *line = malloc(sizeof(char) * line_size + 1);
+    if (line == NULL)
+        return NULL;
+    strncpy(line, string, line_size);
+    line[line_size] = '\0';
+    return line;
 }
 
 /* Read at most bytes_max data available in the socket.
@@ -164,7 +175,20 @@ void serve_client(int client_socketfd) {
                                            BUFFER_LEN - 1, &timeout);
     if (received_bytes > 0) {
         buffer[received_bytes] = '\0';
-        http_request_line *request = parse_request_line(buffer);
+
+        char *method_line = copy_line_crlf(buffer);
+        if (method_line == NULL) {
+            if (errno == 0) {
+                puts("BAD REQUEST LINE");
+            } else {
+                puts("ERROR PARSING REQUEST LINE");
+            }
+            free(buffer);
+            close(client_socketfd);
+            return;
+        }
+
+        http_request_line *request = parse_request_line(method_line);
         printf("Method: %s\nURI: %s\nVersion: %s\n", request->method,
                request->uri, request->http_version);
         free_http_request_line(request);
