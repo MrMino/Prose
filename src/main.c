@@ -67,7 +67,7 @@ http_request_line *parse_request_line(char *request_line) {
 /* Copy characters in the string up to the first CRLF sequence.
  *
  * Returns pointer to a copied string or NULL on error. The new string contains
- * the CRLF character and is zero-terminated.
+ * the CRLF character and is null-terminated.
  *
  * If CRLF is not present in the given string, returns NULL.
  */
