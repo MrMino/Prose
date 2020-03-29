@@ -165,7 +165,6 @@ int recv_request_head(int sockfd, char *buffer, int bytes_max,
 }
 
 /* TODO
- * close() should be called after bind() or listen() fails.
  * close() should be called on a SIGINT.
  * Buffer length should be 8KiB, maybe it should be circular?
  * After first request, use splice() loop.
@@ -218,10 +217,12 @@ int main() {
     if (bind(socketfd, (struct sockaddr *)&server_addr,
              sizeof(struct sockaddr_in))
         < 0) {
+        close(socketfd);
         fatal_errno("Cannot bind", FATAL_SOCK_INIT_FAIL);
     }
 
     if (listen(socketfd, MAX_LISTEN_BACKLOG) < 0) {
+        close(socketfd);
         fatal_errno("Cannot listen on server socket", FATAL_SOCK_INIT_FAIL);
     }
 
