@@ -53,10 +53,14 @@ http_request_line *parse_request_line(const char *request_buffer) {
     int line_size = line_end - request_buffer;
 
     char *request_line_str = malloc(sizeof(char) * line_size + 1);
+    if (request_line_str == NULL)
+        return NULL;
     strncpy(request_line_str, request_buffer, line_size);
     request_line_str[line_size] = '\0';
 
     http_request_line *parsed_line = malloc(sizeof(http_request_line));
+    if (parsed_line == NULL)
+        return NULL;
 
     parsed_line->method = strtok(request_line_str, " ");
     parsed_line->uri = strtok(NULL, " ");
