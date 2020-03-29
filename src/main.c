@@ -19,6 +19,55 @@
 
 #define BUFFER_LEN 1024
 
+/* As defined in RFC7230 section 3.1.1.*/
+typedef struct http_request_line {
+    char *method;
+    char *uri;
+    char *http_version;
+} http_request_line;
+
+void free_http_request_line(http_request_line *ptr) {
+    /* ptr->method should be the same thing as the char array allocated in
+     * parse_request_line(). Free it to free all the other fields.
+     */
+    free(ptr->method);
+    free(ptr);
+}
+
+/* Parse data from buffer as HTTP request.
+ *
+ * Assumes that request_buffer string starts with the first line of the HTTP
+ * request.
+ *
+ * Returns pointer to a newly allocated structure with parsed data or NULL on
+ * error.
+ *
+ * To free the allocated memory, use free_http_request_line().
+ */
+http_request_line *parse_request_line(const char *request_buffer) {
+    char *line_end = strstr(request_buffer, "\r\n");
+    if (line_end == NULL)
+        return NULL;
+    int line_size = line_end - request_buffer;
+
+    char *request_line_str = malloc(sizeof(char) * line_size + 1);
+    strncpy(request_line_str, request_buffer, line_size);
+    request_line_str[line_size] = '\0';
+
+    http_request_line *parsed_line = malloc(sizeof(http_request_line));
+
+    parsed_line->method = strtok(request_line_str, " ");
+    parsed_line->uri = strtok(NULL, " ");
+    parsed_line->http_version = strtok(NULL, " ");
+
+    if (parsed_line->method == NULL || parsed_line->uri == NULL
+        || parsed_line->http_version == NULL) {
+        free_http_request_line(parsed_line);
+        return NULL;
+    }
+    return parsed_line;
+}
+
 /* Read at most bytes_max data available in the socket.
  *
  * This is a simple wrapper around select() -> recv().
@@ -109,7 +158,10 @@ void serve_client(int client_socketfd) {
                                            BUFFER_LEN - 1, &timeout);
     if (received_bytes > 0) {
         buffer[received_bytes] = '\0';
-        printf("BUFFER:\n%s\n", buffer);
+        http_request_line *request = parse_request_line(buffer);
+        printf("Method: %s\nURI: %s\nVersion: %s\n", request->method,
+               request->uri, request->http_version);
+        free_http_request_line(request);
     } else {
         printf("TIMED OUT\n");
     }
