@@ -13,6 +13,7 @@
 #include <errno.h>
 
 #include "fatal.h"
+#include "string_utils.h"
 
 #define LOCAL_PORT 12345
 #define MAX_LISTEN_BACKLOG 128
@@ -62,27 +63,6 @@ http_request_line *parse_request_line(char *request_line) {
         return NULL;
     }
     return parsed_line;
-}
-
-/* Copy characters in the string up to the first CRLF sequence.
- *
- * Returns pointer to a copied string or NULL on error. The new string contains
- * the CRLF character and is null-terminated.
- *
- * If CRLF is not present in the given string, returns NULL.
- */
-char *copy_line_crlf(const char *string) {
-    char *line_end = strstr(string, "\r\n");
-    if (line_end == NULL)
-        return NULL;
-    int line_size = line_end - string;
-
-    char *line = malloc(sizeof(char) * line_size + 1);
-    if (line == NULL)
-        return NULL;
-    strncpy(line, string, line_size);
-    line[line_size] = '\0';
-    return line;
 }
 
 /* Read at most bytes_max data available in the socket.
