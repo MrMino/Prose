@@ -4,7 +4,7 @@ obj = $(src:.c=.o)
 LDFLAGS =
 CFLAGS = -Wall -Wextra -Wpedantic
 
-.PHONY: all debug clean
+.PHONY: all debug clean cflow
 
 all: a.out
 all: CFLAGS += -s
@@ -18,3 +18,6 @@ clean:
 
 a.out: $(obj)
 	$(CC) -o $@ $^ $(LDFLAGS)
+
+cflow:
+	cflow $(src)
