@@ -36,4 +36,32 @@ void free_http_request_line(http_request_line *ptr);
  */
 http_request_line *parse_request_line(char *request_line);
 
+/* Contains host:port components of authority form of request target, as
+ * defined in RFC7230 section 5.3.3 (i.e. without userinfo).
+ */
+typedef struct http_authority {
+    char *host;
+    int port;
+} http_authority;
+
+/* Used to free the memory used by http_authority structure. */
+void free_http_authority(http_authority *ptr);
+
+/* Parse authority string in the form of '<host>:<port>'.
+ *
+ * Assumes that authority_string points to a zero-terminated string that
+ * contains a 'host:port' URI. The ':port' component must be present in the
+ * string.
+ *
+ * The 'port' component must contain a number inside the interval 0 < n <
+ * 65536.
+ *
+ * Returns pointer to a newly allocated structure with parsed data or NULL on
+ * error. Data in the returned structure is memory-independent from the given
+ * string, unlike the data returned by parse_request_line().
+ * To free the memory allocated for the returned structure, use
+ * free_http_authority().
+ */
+http_authority *parse_authority(char *authority_string);
+
 #endif /* ifndef REQUESTS_H */

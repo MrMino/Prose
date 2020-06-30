@@ -55,10 +55,23 @@ void handle_request(int socketfd, char *buffer) {
             }
             return;
         }
-
         printf("Method: %s\nURI: %s\nVersion: %s\n", request->method,
                request->uri, request->http_version);
+
+        http_authority *authority = parse_authority(request->uri);
+        if (authority == NULL) {
+            if (errno == 0) {
+                puts("BAD REQUEST LINE");
+            } else {
+                puts("ERROR PARSING REQUEST LINE");
+            }
+            return;
+        }
+        printf("Host: %s\nPort: %d\n", authority->host, authority->port);
+
+        free_http_authority(authority);
         free_http_request_line(request);
+
     } else {
         puts("TIMED OUT");
     }
