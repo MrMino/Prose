@@ -40,6 +40,7 @@ http_request_line *parse_request_line(char *request_line) {
 
 void free_http_authority(http_authority *ptr) {
     free(ptr->host);
+    free(ptr->port);
     free(ptr);
 }
 
@@ -55,7 +56,7 @@ http_authority *parse_authority(char *authority_string) {
     char *port_string = authority_string + host_len + 1;
 
     int port_len = strlen(port_string);
-    if (port_len == 0)
+    if (port_len == 0 || port_len > 5)
         return NULL;
 
     /* Required, since strtol ignores first few whitespace characters. */
@@ -82,3 +83,19 @@ http_authority *parse_authority(char *authority_string) {
 
     return parsed_data;
 }
+
+/* Contains a mapping of method name (HTTP verb) to a callback that is invoked
+ * to act upon a request with that method name.
+ */
+struct method_callback {
+    /* The method for which operation is called. */
+    const char *verb;
+    /* Operation to call as a logic for a given method.
+     * Takes two arguments: pointer to the current buffer of the request and
+     * a file descriptor of the socket to which the client is connected.
+     */
+    int (*operation)(const char *, int);
+};
+
+struct method_callback accepted_methods[] = {
+        {.verb = NULL, .operation = NULL}};

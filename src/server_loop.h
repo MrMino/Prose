@@ -7,7 +7,7 @@
  */
 
 #ifndef SERVER_LOOP_H
-#define SERVER_LOOP_H value
+#define SERVER_LOOP_H
 
 /* Serve clients until further notice.
  *
